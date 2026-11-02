@@ -47,6 +47,15 @@ const STALE_AFTER_MS = 25 * 60 * 60 * 1000;
 /** How long an isolate trusts its cached snapshot before checking R2 again. */
 const RECHECK_AFTER_MS = 60 * 1000;
 
+/**
+ * PR previews are uploaded as versions of the production Worker (see
+ * `.github/workflows/cd-preview.yml`), so they share its bucket and secrets.
+ * They read `latest.json` like production does, but must never refresh it.
+ */
+function isPreview(env: Env): boolean {
+  return env.ENVIRONMENT === "preview";
+}
+
 // ############################################################################
 // Snapshot loading, cached per isolate
 // ############################################################################
@@ -117,7 +126,7 @@ let inFlight: Promise<unknown> | null = null;
  * still gets whatever is currently stored.
  */
 function refreshIfStale(env: Env, ctx: ExecutionContext, snapshot: Snapshot): void {
-  if (inFlight !== null || !env.SGG_API_KEY) return;
+  if (inFlight !== null || !env.SGG_API_KEY || isPreview(env)) return;
   if (Date.now() - Date.parse(snapshot.asOf) < STALE_AFTER_MS) return;
   inFlight = refresh(env)
     .catch(error => console.error("Background refresh failed", error))
@@ -136,6 +145,9 @@ async function adminSync(request: Request, env: Env): Promise<Response> {
   const token = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!env.SYNC_SECRET || token !== env.SYNC_SECRET) {
     return Response.json(errorBody(401, "Unauthorized"), { status: 401 });
+  }
+  if (isPreview(env)) {
+    return Response.json(errorBody(403, "Refreshes are disabled on previews"), { status: 403 });
   }
   try {
     const { asOf, report } = await refresh(env);
@@ -161,6 +173,8 @@ export default {
   },
 
   async scheduled(_controller: unknown, env: Env, ctx: ExecutionContext): Promise<void> {
+    // An uploaded version never runs the Cron, but a preview must not write if it ever did.
+    if (isPreview(env)) return;
     ctx.waitUntil(refresh(env));
   },
 };

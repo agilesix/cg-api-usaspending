@@ -1,0 +1,78 @@
+name: Preview Deploy
+
+# Uploads each pull request as a version of the production Worker, without
+# deploying it, under the alias pr-<number>. The version answers only at its
+# own URL; production traffic stays on the deployed version. Unlike cg-api-ca
+# and its siblings there is no per-PR Worker or database, so nothing needs
+# cleaning up when the PR closes: Cloudflare keeps the 1,000 most recent
+# aliases.
+#
+# A preview shares production's R2 bucket and secrets. It reads the same
+# latest.json, and ENVIRONMENT=preview stops it from ever writing it (see
+# isPreview in src/worker.ts). Version URLs are public.
+#
+# Repository secrets it needs:
+#   CLOUDFLARE_API_TOKEN   account-owned token with Individual Workers Editor
+#                          on usaspending-commongrants-api
+#   CLOUDFLARE_ACCOUNT_ID
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    name: Upload preview version
+    # Fork PRs get no secrets, so they could not upload anyway.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ALIAS: pr-${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Upload version
+        id: upload
+        env:
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.ndjson
+        run: |
+          pnpm exec wrangler versions upload \
+            --preview-alias "${ALIAS}" \
+            --var ENVIRONMENT:preview \
+            --tag "${ALIAS}" \
+            --message "PR #${{ github.event.pull_request.number }} at ${HEAD_SHA::7}"
+
+          url=$(jq -r 'select(.type == "version-upload") | .preview_alias_url // empty' "${WRANGLER_OUTPUT_FILE_PATH}")
+          if [ -z "${url}" ]; then
+            echo "::error::Wrangler returned no preview URL. Check that preview_urls is enabled on the deployed Worker; it takes effect on the next production deploy."
+            exit 1
+          fi
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-deploy
+          message: |
+            **Preview uploaded** for PR #${{ github.event.pull_request.number }}
+            🔗 **${{ steps.upload.outputs.url }}** · [docs](${{ steps.upload.outputs.url }}/docs)
+            Commit: `${{ env.HEAD_SHA }}`
+
+            Serves production's current data. `/admin/sync` and background refreshes are disabled on previews.

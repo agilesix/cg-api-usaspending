@@ -22,6 +22,11 @@
       "custom_domain": true,
     },
   ],
+  // PR previews are versions of this Worker, uploaded without deploying, each
+  // at <alias>-usaspending-commongrants-api.<subdomain>.workers.dev. With a
+  // custom domain the workers.dev route is off, and Version URLs follow it
+  // unless enabled here. Production stays on the custom domain only.
+  "preview_urls": true,
   "triggers": {
     // Refresh once a day. USAspending loads new award data daily, so running
     // more often would only re-fetch the same records. 08:00 UTC is after the
