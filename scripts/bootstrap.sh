@@ -42,7 +42,9 @@ echo "==> R2 bucket: ${BUCKET}"
 if wrangler r2 bucket info "${BUCKET}" > /dev/null 2>&1; then
   echo "    already exists"
 else
-  wrangler r2 bucket create "${BUCKET}"
+  # wrangler.jsonc already binds the bucket as SNAPSHOTS. Without this flag a
+  # local run asks to add a second binding, and answering yes rewrites the file.
+  wrangler r2 bucket create "${BUCKET}" --update-config=false
 fi
 
 echo "==> Deploying the Worker"
