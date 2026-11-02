@@ -110,7 +110,19 @@ export function createApp({ opportunities, awards, snapshot }: CreateAppOptions)
     ],
   });
 
-  app.get("/docs", swaggerUI({ url: "./openapi.json", version: "5" }));
+  // Titled like the state APIs' docs pages ("CA CommonGrants API Reference").
+  app.get(
+    "/docs",
+    swaggerUI({
+      url: "./openapi.json",
+      version: "5",
+      title: "USAspending CommonGrants API Reference",
+    })
+  );
+
+  // The base URL has nothing of its own to serve, so send visitors to the docs,
+  // as the state APIs do.
+  app.get("/", c => c.redirect("/docs"));
 
   // An unrouted path still answers with a body a CommonGrants client can parse.
   app.notFound(c => c.json(errorBody(404, "Not found"), 404));

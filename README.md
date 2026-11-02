@@ -112,6 +112,7 @@ see [`src/pipeline/config.ts`](src/pipeline/config.ts).
 | `GET`  | `/health`                              | Liveness check                                                  |
 | `GET`  | `/openapi.json`                        | The OpenAPI 3.1 document                                        |
 | `GET`  | `/docs`                                | Swagger UI                                                      |
+| `GET`  | `/`                                    | Redirects to `/docs`                                            |
 | `POST` | `/admin/sync`                          | Deployed only: run a refresh now (Bearer `SYNC_SECRET`)         |
 
 Award search supports the protocol's default filters (`status`,

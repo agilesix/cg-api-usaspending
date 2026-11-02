@@ -33,7 +33,15 @@ describe("createApp", () => {
     expect(res.headers.get("content-type")).toContain("text/html");
     // Relative, so the page still finds the document when the app is mounted
     // under a path prefix.
-    expect(await res.text()).toMatch(/url:\s*["']\.\/openapi\.json["']/);
+    const html = await res.text();
+    expect(html).toMatch(/url:\s*["']\.\/openapi\.json["']/);
+    expect(html).toContain("<title>USAspending CommonGrants API Reference</title>");
+  });
+
+  it("redirects the base URL to the docs", async () => {
+    const res = await app().request("/");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/docs");
   });
 
   it("answers an unrouted path with an ErrorSchema-valid 404", async () => {
