@@ -1,0 +1,213 @@
+[
+  {
+    "id": "0f8d3c1a-4b2e-4c6f-9a10-000000000001",
+    "title": "Clean Water Infrastructure Grants",
+    "description": "Capital funding for municipal drinking water and wastewater system upgrades.",
+    "status": { "value": "open", "description": "Accepting applications" },
+    "funding": {
+      "details": "Awards are made on a rolling basis until funds are exhausted.",
+      "totalAmountAvailable": { "amount": "5000000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "50000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "250000.00", "currency": "USD" },
+      "minAwardCount": 20,
+      "maxAwardCount": 100,
+      "estimatedAwardCount": 45
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2026-01-15" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2026-03-31",
+        "time": "17:00:00"
+      }
+    },
+    "acceptedApplicantTypes": [
+      { "value": "government_municipal" },
+      { "value": "government_county" }
+    ],
+    "source": "https://example.org/opportunities/clean-water-infrastructure",
+    "createdAt": "2026-01-15T09:00:00Z",
+    "lastModifiedAt": "2026-02-10T09:00:00Z"
+  },
+  {
+    "id": "1a9e4d2b-5c3f-4d70-8b21-000000000002",
+    "title": "Rural Broadband Expansion Fund",
+    "description": "Last-mile broadband deployment in unserved and underserved rural communities.",
+    "status": { "value": "open" },
+    "funding": {
+      "totalAmountAvailable": { "amount": "12000000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "100000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "1000000.00", "currency": "USD" },
+      "estimatedAwardCount": 18
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2026-02-01" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2026-06-30"
+      }
+    },
+    "acceptedApplicantTypes": [
+      { "value": "for_profit_small_business" },
+      { "value": "government_tribal" },
+      { "value": "non_profit_with_501c3" }
+    ],
+    "source": "https://example.org/opportunities/rural-broadband",
+    "createdAt": "2026-02-01T12:00:00Z",
+    "lastModifiedAt": "2026-02-12T14:30:00Z"
+  },
+  {
+    "id": "2b0f5e3c-6d40-4e81-9c32-000000000003",
+    "title": "Community Arts Microgrants",
+    "description": "Small grants for neighborhood arts programming and public installations.",
+    "status": { "value": "closed", "description": "The application period has ended" },
+    "funding": {
+      "totalAmountAvailable": { "amount": "250000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "1000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "10000.00", "currency": "USD" },
+      "estimatedAwardCount": 40
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2025-09-01" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2025-11-15"
+      }
+    },
+    "acceptedApplicantTypes": [{ "value": "individual" }, { "value": "nonprofit_without_501c3" }],
+    "createdAt": "2025-09-01T08:00:00Z",
+    "lastModifiedAt": "2026-01-05T08:00:00Z"
+  },
+  {
+    "id": "3c1a6f4d-7e51-4f92-8d43-000000000004",
+    "title": "STEM Teacher Fellowship",
+    "description": "Multi-year fellowships for secondary STEM educators in high-need districts.",
+    "status": { "value": "forecasted", "description": "Expected to open in mid-2026" },
+    "funding": {
+      "totalAmountAvailable": { "amount": "3000000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "25000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "75000.00", "currency": "USD" },
+      "estimatedAwardCount": 60
+    },
+    "keyDates": {
+      "closeDate": {
+        "name": "Anticipated application deadline",
+        "eventType": "singleDate",
+        "date": "2026-09-01"
+      }
+    },
+    "acceptedApplicantTypes": [
+      { "value": "school_district_independent" },
+      { "value": "higher_education_public" }
+    ],
+    "source": "https://example.org/opportunities/stem-teacher-fellowship",
+    "createdAt": "2026-01-28T10:00:00Z",
+    "lastModifiedAt": "2026-02-12T14:30:00Z"
+  },
+  {
+    "id": "4d2b7a5e-8f62-4a03-9e54-000000000005",
+    "title": "Wildfire Resilience Planning",
+    "description": "Planning grants for community wildfire protection plans and defensible space programs.",
+    "status": { "value": "open" },
+    "funding": {
+      "totalAmountAvailable": { "amount": "800000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "20000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "200000.00", "currency": "USD" },
+      "estimatedAwardCount": 12
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2026-01-05" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2026-03-31"
+      },
+      "otherDates": {
+        "informationSession": {
+          "name": "Applicant information session",
+          "eventType": "singleDate",
+          "date": "2026-02-18",
+          "time": "15:00:00"
+        }
+      }
+    },
+    "acceptedApplicantTypes": [
+      { "value": "government_special_district" },
+      { "value": "government_county" }
+    ],
+    "createdAt": "2026-01-05T11:45:00Z",
+    "lastModifiedAt": "2026-02-01T11:45:00Z"
+  },
+  {
+    "id": "5e3c8b6f-9073-4b14-8f65-000000000006",
+    "title": "Historic Preservation Pilot",
+    "description": "A pilot program whose funding levels and deadline have not been published yet.",
+    "status": {
+      "value": "custom",
+      "customValue": "under_review",
+      "description": "Held pending an internal funding review"
+    },
+    "acceptedApplicantTypes": [{ "value": "custom", "customValue": "preservation_trust" }],
+    "createdAt": "2026-01-20T16:20:00Z",
+    "lastModifiedAt": "2026-01-20T16:20:00Z"
+  },
+  {
+    "id": "6f4d9c70-a184-4c25-9076-000000000007",
+    "title": "Small Business Innovation Vouchers",
+    "description": "Vouchers that let small firms buy research services from participating universities.",
+    "status": { "value": "closed" },
+    "funding": {
+      "totalAmountAvailable": { "amount": "1500000.00", "currency": "USD" },
+      "minAwardAmount": { "amount": "5000.00", "currency": "USD" },
+      "maxAwardAmount": { "amount": "50000.00", "currency": "USD" },
+      "estimatedAwardCount": 75
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2025-10-01" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2025-12-31"
+      }
+    },
+    "acceptedApplicantTypes": [{ "value": "for_profit_small_business" }],
+    "source": "https://example.org/opportunities/innovation-vouchers",
+    "createdAt": "2025-10-01T10:00:00Z",
+    "lastModifiedAt": "2025-12-20T10:00:00Z"
+  },
+  {
+    "id": "7a5e0d81-b295-4d36-8187-000000000008",
+    "title": "Coastal Habitat Restoration",
+    "description": "Large-scale restoration of tidal wetlands, oyster reefs and coastal dune systems.",
+    "status": { "value": "open" },
+    "funding": {
+      "details": "Cost share of at least 25 percent is required.",
+      "totalAmountAvailable": { "amount": "25000000.00", "currency": "EUR" },
+      "minAwardAmount": { "amount": "250000.00", "currency": "EUR" },
+      "maxAwardAmount": { "amount": "2500000.00", "currency": "EUR" },
+      "minAwardCount": 5,
+      "maxAwardCount": 30,
+      "estimatedAwardCount": 15
+    },
+    "keyDates": {
+      "postDate": { "name": "Application posted", "eventType": "singleDate", "date": "2026-02-09" },
+      "closeDate": {
+        "name": "Application deadline",
+        "eventType": "singleDate",
+        "date": "2027-01-15"
+      }
+    },
+    "acceptedApplicantTypes": [
+      { "value": "government_state" },
+      { "value": "government_tribal" },
+      { "value": "higher_education_public" },
+      { "value": "non_profit_with_501c3" }
+    ],
+    "source": "https://example.org/opportunities/coastal-habitat-restoration",
+    "createdAt": "2026-02-09T07:15:00Z",
+    "lastModifiedAt": "2026-02-11T07:15:00Z"
+  }
+]
