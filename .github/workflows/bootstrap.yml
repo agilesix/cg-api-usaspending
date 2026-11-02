@@ -1,0 +1,59 @@
+name: Bootstrap
+
+# One-time Cloudflare setup, safe to re-run: creates the R2 bucket, deploys the
+# Worker (with its Cron and custom domain), saves the Worker secrets, and runs
+# the first refresh. See scripts/bootstrap.sh.
+#
+# Repository secrets it needs:
+#   CLOUDFLARE_API_TOKEN   token with Workers Scripts, Workers R2 Storage and
+#                          Workers Routes edit permissions (and Zone DNS edit
+#                          for the custom domain)
+#   CLOUDFLARE_ACCOUNT_ID
+#   SGG_API_KEY            Simpler.Grants.gov API key, used by the refresh
+#   SYNC_SECRET            any string; the Bearer token for POST /admin/sync
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Set up Cloudflare
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SGG_API_KEY: ${{ secrets.SGG_API_KEY }}
+      SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+      BASE_URL: ${{ vars.PRODUCTION_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check secrets
+        run: |
+          missing=""
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID SGG_API_KEY SYNC_SECRET; do
+            if [ -z "${!name:-}" ]; then missing="${missing} ${name}"; fi
+          done
+          if [ -n "${missing}" ]; then
+            echo "::error::Missing repository secrets:${missing}"
+            exit 1
+          fi
+
+      - name: Run scripts/bootstrap.sh
+        run: |
+          if [ -z "${BASE_URL}" ]; then unset BASE_URL; fi
+          ./scripts/bootstrap.sh

@@ -7,7 +7,7 @@
  */
 
 import { OpportunitySchema, type Opportunity } from "../src/data/schema.js";
-import type { OpportunityRepository, Page } from "../src/data/repository.js";
+import type { AwardRepository, OpportunityRepository, Page } from "../src/data/repository.js";
 
 let seq = 0;
 
@@ -54,9 +54,27 @@ export interface StubResponses {
   throws?: Error;
 }
 
-/** A repository that answers with canned values and records how it was called. */
+/** An award repository with nothing in it, for tests that exercise opportunities only. */
+export const emptyAwardRepository: AwardRepository = {
+  async list() {
+    return { items: [], totalItems: 0 };
+  },
+  async get() {
+    return null;
+  },
+  async search() {
+    return { items: [], totalItems: 0 };
+  },
+};
+
+/**
+ * An opportunity repository that answers with canned values and records how it
+ * was called. The result can be passed straight to `createApp()`.
+ */
 export function stubRepository(responses: StubResponses = {}): {
   repository: OpportunityRepository;
+  opportunities: OpportunityRepository;
+  awards: AwardRepository;
   calls: StubCalls;
 } {
   const calls: StubCalls = { list: [], get: [], search: [] };
@@ -81,7 +99,7 @@ export function stubRepository(responses: StubResponses = {}): {
     },
   };
 
-  return { repository, calls };
+  return { repository, opportunities: repository, awards: emptyAwardRepository, calls };
 }
 
 export function emptyPage(): Page<Opportunity> {

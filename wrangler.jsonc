@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "usaspending-commongrants-api",
+  "main": "src/worker.ts",
+  // Same compatibility date and flags as the state APIs (cg-api-ca and siblings).
+  "compatibility_date": "2026-03-20",
+  "compatibility_flags": ["nodejs_compat"],
+  // Naming convention: {source}-{data domain}-{purpose}, following the state
+  // APIs' {state}-grants-{purpose}.
+  "r2_buckets": [
+    {
+      "binding": "SNAPSHOTS",
+      "bucket_name": "usaspending-awards-snapshots",
+    },
+  ],
+  // The web address, following the state APIs' {state}.api.cg.a6lab.ai.
+  // Deploying creates it, as long as the a6lab.ai zone is in the same Cloudflare
+  // account as the Worker.
+  "routes": [
+    {
+      "pattern": "usaspending.api.cg.a6lab.ai",
+      "custom_domain": true,
+    },
+  ],
+  "triggers": {
+    // Refresh once a day. USAspending loads new award data daily, so running
+    // more often would only re-fetch the same records. 08:00 UTC is after the
+    // overnight load, and matches cg-api-md.
+    "crons": ["0 8 * * *"],
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+  },
+  // Secrets, set with `wrangler secret put` (never in this file):
+  //   SGG_API_KEY   Simpler.Grants.gov API key, used by the refresh
+  //   SYNC_SECRET   Bearer token for POST /admin/sync
+  "observability": {
+    "enabled": true,
+  },
+}

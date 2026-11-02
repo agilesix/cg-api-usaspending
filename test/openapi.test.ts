@@ -13,9 +13,13 @@ interface Document {
 
 const OPERATIONS: [path: string, method: string, statuses: string[]][] = [
   ["/health", "get", ["200"]],
+  ["/snapshot", "get", ["200", "404"]],
   ["/common-grants/opportunities", "get", ["200", "400", "500"]],
   ["/common-grants/opportunities/{oppId}", "get", ["200", "400", "404", "500"]],
   ["/common-grants/opportunities/search", "post", ["200", "400", "500"]],
+  ["/common-grants/awards", "get", ["200", "400", "500"]],
+  ["/common-grants/awards/{awdId}", "get", ["200", "400", "404", "500"]],
+  ["/common-grants/awards/search", "post", ["200", "400", "500"]],
 ];
 
 let document: Document;

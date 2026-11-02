@@ -13,3 +13,7 @@ node_modules/
 
 # macOS-specific files
 .DS_Store
+
+# wrangler local secrets and state
+.dev.vars
+.wrangler/
