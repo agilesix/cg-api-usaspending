@@ -10,8 +10,9 @@
 #   4. Runs the first refresh through POST /admin/sync, so the API serves
 #      today's data instead of the snapshot bundled with the code.
 #
-# Run it locally after `pnpm exec wrangler login`, or from the "Bootstrap"
-# GitHub Action, which supplies CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+# Run it locally after `pnpm exec wrangler login`. It is not run from CI:
+# creating the Worker and the bucket needs more access than CI's per-Worker
+# tokens have.
 #
 # Needs SGG_API_KEY and SYNC_SECRET in the environment. Locally they are read
 # from .env and .dev.vars when present.

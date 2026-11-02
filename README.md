@@ -135,31 +135,48 @@ day leaves the last good snapshot in place.
 | [`wrangler.jsonc`](wrangler.jsonc)                         | Worker, R2 bucket, daily Cron at 08:00 UTC, `usaspending.api.cg.a6lab.ai` |
 | [`src/worker.ts`](src/worker.ts)                           | Serves `latest.json`, runs the scheduled refresh and `/admin/sync`        |
 | [`scripts/bootstrap.sh`](scripts/bootstrap.sh)             | One-time setup: bucket, first deploy, Worker secrets, first refresh       |
-| [`bootstrap.yml`](.github/workflows/bootstrap.yml)         | Runs `scripts/bootstrap.sh` from the Actions tab                          |
 | [`cd-production.yml`](.github/workflows/cd-production.yml) | Checks and deploys on every push to `main`                                |
+| [`cd-preview.yml`](.github/workflows/cd-preview.yml)       | Uploads each PR as a preview version of the Worker                        |
 | [`manual-sync.yml`](.github/workflows/manual-sync.yml)     | Runs a refresh on the deployed API from the Actions tab                   |
 
 **One-time setup.** `scripts/bootstrap.sh` does all of it and is safe to re-run.
 It creates the R2 bucket, deploys the Worker (which also creates the Cron and
 the custom domain), saves `SGG_API_KEY` and `SYNC_SECRET` as Worker secrets, and
-runs the first refresh. Either:
+runs the first refresh. Run it locally: `pnpm exec wrangler login`, put
+`SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`, then `pnpm run bootstrap`. Works
+from any branch. It stays out of CI because creating the Worker and the bucket
+needs more access than the per-Worker tokens below have.
 
-- **Locally:** `pnpm exec wrangler login`, put `SGG_API_KEY` in `.env` and
-  `SYNC_SECRET` in `.dev.vars`, then `pnpm run bootstrap`. Works from any branch.
-- **From GitHub:** add the repository secrets below, then run the **Bootstrap**
-  action.
+CI/CD shares one account-owned API token, limited to this Worker with the
+**Individual Workers: Editor** role (per-Worker roles need account-owned
+tokens). That is enough to upload previews and to deploy, since deploys leave
+the custom domain unchanged. If a production deploy ever fails with a 403 on
+routes, add Zone → Workers Routes → Edit on `a6lab.ai`.
 
-| Repository secret       | What it is                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| `CLOUDFLARE_API_TOKEN`  | Token with Workers Scripts, Workers R2 Storage and Workers Routes edit, plus Zone DNS edit |
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account the state APIs use                                                  |
-| `SGG_API_KEY`           | Simpler.Grants.gov API key, used by the refresh                                            |
-| `SYNC_SECRET`           | Any string; callers of `/admin/sync` must send it as a Bearer token                        |
+| Secret                  | What it is                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Individual Workers Editor on `usaspending-commongrants-api`         |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account the state APIs use                           |
+| `SYNC_SECRET`           | Any string; callers of `/admin/sync` must send it as a Bearer token |
 
-Set the repository variable `PRODUCTION_BASE_URL` too if the API lives
-somewhere other than `https://usaspending.api.cg.a6lab.ai`. After setup, the
-Worker secrets persist across deploys, so `cd-production.yml` only deploys.
-Re-run the bootstrap to change one.
+Set the repository variable `PRODUCTION_BASE_URL` too; Manual sync needs it.
+After setup, the Worker secrets persist across deploys, so
+`cd-production.yml` only deploys. Re-run the bootstrap to change one.
+
+**PR previews.** `cd-preview.yml` uploads every pull request from this
+repository as a new version of the production Worker without deploying it, and
+comments its URL on the PR: `https://pr-<number>-usaspending-commongrants-api.<subdomain>.workers.dev`.
+Production traffic keeps going to the deployed version, and there is nothing to
+clean up when the PR closes. A preview shares production's R2 bucket and
+secrets: it serves the same `latest.json`, and because it runs with
+`ENVIRONMENT=preview` it never writes it (`/admin/sync` answers `403` and
+background refreshes are off). Preview URLs are public. Two caveats:
+
+- Previews only get a URL once a production deploy has applied
+  `preview_urls: true` from `wrangler.jsonc`.
+- While a preview is the Worker's newest version, `wrangler secret put` refuses
+  to run until the next production deploy. Use `wrangler versions secret put`
+  or re-run the bootstrap, which deploys before it sets secrets.
 
 To try the Worker locally, put `SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`
 and run `pnpm run dev:worker`. `wrangler dev --test-scheduled` also exposes

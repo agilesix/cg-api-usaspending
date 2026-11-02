@@ -1,9 +1,14 @@
 name: Production Deploy
 
 # Deploys the Worker on every push to main, after the same checks CI runs.
-# Adapted from cg-api-ca. Run the Bootstrap action (or scripts/bootstrap.sh)
-# once first: it creates the R2 bucket and saves the Worker secrets, which
-# persist across deploys.
+# Adapted from cg-api-ca. Run scripts/bootstrap.sh locally once first: it
+# creates the R2 bucket and saves the Worker secrets, which persist across
+# deploys.
+#
+# Repository secrets it needs:
+#   CLOUDFLARE_API_TOKEN   account-owned token with Individual Workers Editor
+#                          on usaspending-commongrants-api
+#   CLOUDFLARE_ACCOUNT_ID
 
 on:
   push:
