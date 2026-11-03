@@ -4,8 +4,7 @@
 # needs, in order:
 #
 #   1. Creates the R2 bucket the snapshots live in (skipped if it exists).
-#   2. Deploys the Worker. That also creates the daily Cron trigger and the
-#      custom domain in wrangler.jsonc.
+#   2. Deploys the Worker. That also creates the daily Cron trigger.
 #   3. Saves SGG_API_KEY and SYNC_SECRET as Worker secrets.
 #   4. Runs the first refresh through POST /admin/sync, so the API serves
 #      today's data instead of the snapshot bundled with the code.
@@ -13,6 +12,11 @@
 # Run it locally after `pnpm exec wrangler login`. It is not run from CI:
 # creating the Worker and the bucket needs more access than CI's per-Worker
 # tokens have.
+#
+# It does not attach the custom domain, usaspending.api.cg.a6lab.ai: do that in
+# the Cloudflare dashboard (Worker > Settings > Domains & Routes), as for the
+# state APIs. On a first run, before the domain exists, set BASE_URL to the
+# Worker's workers.dev URL so step 4 can reach it.
 #
 # Needs SGG_API_KEY and SYNC_SECRET in the environment. Locally they are read
 # from .env and .dev.vars when present.
