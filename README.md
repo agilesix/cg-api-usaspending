@@ -130,28 +130,34 @@ stored as `latest.json` (what the API serves) and as a dated copy under
 `snapshots/`. A refresh that matches no awards is not stored, so a bad upstream
 day leaves the last good snapshot in place.
 
-| Piece                                                      | What it does                                                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [`wrangler.jsonc`](wrangler.jsonc)                         | Worker, R2 bucket, daily Cron at 08:00 UTC, `usaspending.api.cg.a6lab.ai` |
-| [`src/worker.ts`](src/worker.ts)                           | Serves `latest.json`, runs the scheduled refresh and `/admin/sync`        |
-| [`scripts/bootstrap.sh`](scripts/bootstrap.sh)             | One-time setup: bucket, first deploy, Worker secrets, first refresh       |
-| [`cd-production.yml`](.github/workflows/cd-production.yml) | Checks and deploys on every push to `main`                                |
-| [`cd-preview.yml`](.github/workflows/cd-preview.yml)       | Uploads each PR as a preview version of the Worker                        |
-| [`manual-sync.yml`](.github/workflows/manual-sync.yml)     | Runs a refresh on the deployed API from the Actions tab                   |
+| Piece                                                      | What it does                                                               |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`wrangler.jsonc`](wrangler.jsonc)                         | Worker, R2 bucket, daily Cron at 08:00 UTC, `workers.dev` and preview URLs |
+| [`src/worker.ts`](src/worker.ts)                           | Serves `latest.json`, runs the scheduled refresh and `/admin/sync`         |
+| [`scripts/bootstrap.sh`](scripts/bootstrap.sh)             | One-time setup: bucket, first deploy, Worker secrets, first refresh        |
+| [`cd-production.yml`](.github/workflows/cd-production.yml) | Checks and deploys on every push to `main`                                 |
+| [`cd-preview.yml`](.github/workflows/cd-preview.yml)       | Uploads each PR as a preview version of the Worker                         |
+| [`manual-sync.yml`](.github/workflows/manual-sync.yml)     | Runs a refresh on the deployed API from the Actions tab                    |
 
-**One-time setup.** `scripts/bootstrap.sh` does all of it and is safe to re-run.
-It creates the R2 bucket, deploys the Worker (which also creates the Cron and
-the custom domain), saves `SGG_API_KEY` and `SYNC_SECRET` as Worker secrets, and
-runs the first refresh. Run it locally: `pnpm exec wrangler login`, put
-`SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`, then `pnpm run bootstrap`. Works
-from any branch. It stays out of CI because creating the Worker and the bucket
-needs more access than the per-Worker tokens below have.
+**One-time setup.** `scripts/bootstrap.sh` does all of it except the custom
+domain, and is safe to re-run. It creates the R2 bucket, deploys the Worker
+(which also creates the Cron), saves `SGG_API_KEY` and `SYNC_SECRET` as Worker
+secrets, and runs the first refresh. Run it locally: `pnpm exec wrangler login`,
+put `SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`, then `pnpm run bootstrap`.
+Works from any branch. It stays out of CI because creating the Worker and the
+bucket needs more access than the per-Worker tokens below have.
+
+Then attach `usaspending.api.cg.a6lab.ai` in the Cloudflare dashboard (Worker →
+Settings → Domains & Routes). On a first run, before the domain exists, set
+`BASE_URL` to the Worker's `workers.dev` URL so the bootstrap's first refresh
+can reach it.
 
 CI/CD shares one account-owned API token, limited to this Worker with the
 **Individual Workers: Editor** role (per-Worker roles need account-owned
-tokens). That is enough to upload previews and to deploy, since deploys leave
-the custom domain unchanged. If a production deploy ever fails with a 403 on
-routes, add Zone → Workers Routes → Edit on `a6lab.ai`.
+tokens). That is enough to upload previews and to deploy. The custom domain is
+kept out of `wrangler.jsonc`, as in the state APIs, because wrangler re-applies
+listed custom domains on every deploy, and that needs access to the `a6lab.ai`
+zone.
 
 | Secret                  | What it is                                                          |
 | ----------------------- | ------------------------------------------------------------------- |
