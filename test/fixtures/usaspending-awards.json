@@ -1,0 +1,188 @@
+[
+  {
+    "generated_unique_award_id": "ASST_NON_SIWCM248002_075",
+    "fain": "SIWCM248002",
+    "uri": "SIWCM248002-2645712086",
+    "category": "grant",
+    "type": "04",
+    "type_description": "PROJECT GRANT (B)",
+    "description": "STATE INNOVATION WAIVER UNDER SECTION 1332 OF THE AFFORDABLE CARE ACT",
+    "date_signed": "2024-04-23",
+    "total_obligation": 30097499241,
+    "total_outlay": 29872370223.72,
+    "total_account_outlay": 29872370223.72,
+    "non_federal_funding": 0,
+    "period_of_performance": {
+      "start_date": "2024-04-01",
+      "end_date": "2029-12-31",
+      "last_modified_date": "2026-06-22"
+    },
+    "funding_opportunity": {
+      "number": "IW-SIW-18-001",
+      "goals": "NOT APPLICABLE"
+    },
+    "cfda_info": [
+      {
+        "cfda_number": "93.423",
+        "cfda_title": "1332 State Innovation Waivers"
+      }
+    ],
+    "awarding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Centers for Medicare and Medicaid Services",
+        "code": "7530",
+        "abbreviation": "CMS"
+      }
+    },
+    "funding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Centers for Medicare and Medicaid Services",
+        "code": "7530",
+        "abbreviation": "CMS"
+      }
+    },
+    "recipient": {
+      "recipient_name": "NYS DEPARTMENT OF HEALTH",
+      "recipient_uei": "F863WQVMZSK7",
+      "recipient_unique_id": null,
+      "recipient_hash": "78e2168c-91dc-4ee3-f4cb-fb8e0cff6ea8-R",
+      "parent_recipient_name": null,
+      "parent_recipient_uei": null,
+      "parent_recipient_hash": null
+    }
+  },
+  {
+    "generated_unique_award_id": "ASST_NON_X98SM090429_075",
+    "fain": "X98SM090429",
+    "uri": "X98SM090429-3066963740",
+    "category": "grant",
+    "type": "03",
+    "type_description": "FORMULA GRANT (A)",
+    "description": "PROTECTION & ADVOCACY FOR INDIVIDUALS WITH MNTL ILLNESS",
+    "date_signed": "2024-11-06",
+    "total_obligation": 1048724,
+    "total_outlay": 1048724,
+    "total_account_outlay": 1048724,
+    "non_federal_funding": 0,
+    "period_of_performance": {
+      "start_date": "2024-10-01",
+      "end_date": "2026-09-30",
+      "last_modified_date": "2025-09-05"
+    },
+    "funding_opportunity": {
+      "number": "SM00-PAIMI",
+      "goals": "TO ENABLE THE EXPANSION OF THE PROTECTION AND ADVOCACY SYSTEM ESTABLISHED IN EACH STATE TO: (1) PROTECT AND ADVOCATE THE RIGHTS OF INDIVIDUALS WITH MENTAL ILLNESS, (2) INVESTIGATE INCIDENTS OF ABUSE AND NEGLECT OF INDIVIDUALS WITH MENTAL ILLNESS IF THE INCIDENTS ARE REPORTED TO THE SYSTEM OR IF THERE IS PROBABLE CAUSE TO BELIEVE THAT THE INCIDENTS OCCURRED, (3) INVESTIGATE INCIDENTS OF SERIOUS INJURY AND DEATHS IN PUBLIC AND PRIVATE CARE AND TREATMENT FACILITIES AND NON-MEDICAL COMMUNITY-BASED FACILITIES FOR CHILDREN AND YOUTH, AND (4) TO RECEIVE REPORTS OF ALL SERIOUS INJURIES AND DEATHS RELATED TO INCIDENTS OF SECLUSION AND RESTRAINT IN PUBLIC AND PRIVATE CARE AND TREATMENT FACILITIES IN THE STATES AND TERRITORIES."
+    },
+    "cfda_info": [
+      {
+        "cfda_number": "93.138",
+        "cfda_title": "Protection and Advocacy for Individuals with Mental Illness"
+      }
+    ],
+    "awarding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Substance Abuse and Mental Health Services Administration",
+        "code": "7522",
+        "abbreviation": "SAMHSA"
+      }
+    },
+    "funding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Substance Abuse and Mental Health Services Administration",
+        "code": "7522",
+        "abbreviation": "SAMHSA"
+      }
+    },
+    "recipient": {
+      "recipient_name": "GEORGIA ADVOCACY OFFICE, INC.",
+      "recipient_uei": "U27SFYCVR7S5",
+      "recipient_unique_id": null,
+      "recipient_hash": "4675cec4-3457-4229-ad62-1f9716827f2d-R",
+      "parent_recipient_name": null,
+      "parent_recipient_uei": null,
+      "parent_recipient_hash": null
+    }
+  },
+  {
+    "generated_unique_award_id": "ASST_NON_2505CA5MAP_075",
+    "fain": "2505CA5MAP",
+    "uri": "2505CA5MAP-2836577824",
+    "category": "grant",
+    "type": "02",
+    "type_description": "BLOCK GRANT (A)",
+    "description": "MEDICAID ENTITLEMENT FOR 7 - FY 2026 - T19",
+    "date_signed": "2024-10-01",
+    "total_obligation": 100102109892,
+    "total_outlay": 100097070850,
+    "total_account_outlay": 100097070850,
+    "non_federal_funding": 0,
+    "period_of_performance": {
+      "start_date": "2024-10-01",
+      "end_date": "2025-09-30",
+      "last_modified_date": "2026-07-20"
+    },
+    "funding_opportunity": {
+      "number": "NOT APPLICABLE",
+      "goals": "NOT APPLICABLE"
+    },
+    "cfda_info": [
+      {
+        "cfda_number": "93.778",
+        "cfda_title": "Grants to States for Medicaid"
+      }
+    ],
+    "awarding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Centers for Medicare and Medicaid Services",
+        "code": "7530",
+        "abbreviation": "CMS"
+      }
+    },
+    "funding_agency": {
+      "toptier_agency": {
+        "name": "Department of Health and Human Services",
+        "code": "075",
+        "abbreviation": "HHS"
+      },
+      "subtier_agency": {
+        "name": "Centers for Medicare and Medicaid Services",
+        "code": "7530",
+        "abbreviation": "CMS"
+      }
+    },
+    "recipient": {
+      "recipient_name": "HEALTH CARE SERVICES, CALIFORNIA DEPARTMENT OF",
+      "recipient_uei": "JE73CDQUAPA7",
+      "recipient_unique_id": null,
+      "recipient_hash": "7fe0d08f-685f-a9cc-f9f6-f9e6c6c20e22-R",
+      "parent_recipient_name": null,
+      "parent_recipient_uei": null,
+      "parent_recipient_hash": null
+    }
+  }
+]

@@ -1,15 +1,19 @@
 /**
  * The Node entrypoint.
  *
- * This is the only file that knows the app runs on Node: it composes the
- * bundled fixtures with {@link createApp} and hands the resulting `fetch`
- * handler to `@hono/node-server`. Swapping in another runtime means writing
- * another file like this one, not touching the app.
+ * Serves the snapshot bundled at `src/data/snapshot.json`, so a local run needs
+ * no API key and no network. `pnpm refresh` rewrites that file from the live
+ * APIs. The deployed service runs `src/worker.ts` instead, which refreshes on a
+ * schedule. Swapping in another runtime means writing another file like this
+ * one, not touching the app.
  */
 
 import { serve } from "@hono/node-server";
-import { createApp } from "./app.js";
-import { fixtureRepository } from "./data/fixtures.js";
+import { createAppFromSnapshot } from "./app.js";
+import { SnapshotSchema } from "./data/snapshot.js";
+// A plain import, so `tsc` emits the JSON into `dist` alongside this file. No
+// copy step in the build.
+import rawSnapshot from "./data/snapshot.json" with { type: "json" };
 
 /** The documented local default. Override with `PORT` for another port. */
 export const DEFAULT_PORT = 3000;
@@ -22,10 +26,15 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) {
   process.exit(1);
 }
 
-const app = createApp({ repository: fixtureRepository });
+// Parsed at startup, so a snapshot that no longer matches the published
+// schemas fails on boot instead of leaking a half-valid response later.
+const snapshot = SnapshotSchema.parse(rawSnapshot);
+const app = createAppFromSnapshot(snapshot);
 
 serve({ fetch: app.fetch, port }, info => {
   console.log(`CommonGrants API listening on http://localhost:${info.port}`);
+  console.log(`  Data as of     ${snapshot.asOf}`);
+  console.log(`  Awards         http://localhost:${info.port}/common-grants/awards`);
   console.log(`  Opportunities  http://localhost:${info.port}/common-grants/opportunities`);
   console.log(`  OpenAPI        http://localhost:${info.port}/openapi.json`);
   console.log(`  Docs           http://localhost:${info.port}/docs`);

@@ -1,0 +1,73 @@
+name: Manual sync
+
+# Runs a refresh against the deployed API by calling its Bearer-authenticated
+# admin endpoint (the same refresh the daily Cron runs). Adapted from cg-api-ca.
+#
+# Setup (once per repo):
+#   - Repository secret   SYNC_SECRET
+#   - Repository variable PRODUCTION_BASE_URL, e.g. https://usaspending.api.cg.a6lab.ai
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Override API base URL (defaults to vars.PRODUCTION_BASE_URL)"
+        type: string
+        required: false
+
+concurrency:
+  group: manual-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Trigger admin sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: POST /admin/sync
+        env:
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+          BASE_URL: ${{ inputs.base_url || vars.PRODUCTION_BASE_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "::error::No base URL. Set the PRODUCTION_BASE_URL repo variable or pass the base_url input."
+            exit 1
+          fi
+          if [ -z "${SYNC_SECRET:-}" ]; then
+            echo "::error::SYNC_SECRET secret is not set."
+            exit 1
+          fi
+
+          url="${BASE_URL%/}/admin/sync"
+          echo "POST ${url}"
+
+          http=$(curl -sS -X POST "${url}" \
+            -H "Authorization: Bearer ${SYNC_SECRET}" \
+            --max-time 600 \
+            -o response.json -w '%{http_code}')
+
+          echo "HTTP ${http}"
+          cat response.json 2>/dev/null || true
+          echo ""
+
+          {
+            echo "### Manual sync — \`${GITHUB_REPOSITORY}\`"
+            echo ""
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| endpoint | \`${url}\` |"
+            echo "| status | \`HTTP ${http}\` |"
+            echo ""
+            echo '```json'
+            cat response.json 2>/dev/null || echo "(no body)"
+            echo ""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${http}" != "200" ]; then
+            echo "::error::Sync failed (HTTP ${http})"
+            exit 1
+          fi

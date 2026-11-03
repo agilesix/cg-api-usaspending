@@ -23,10 +23,15 @@
     "test:coverage": "vitest run --coverage",
     "audit": "pnpm audit --audit-level high",
     "audit:report": "pnpm audit",
-    "ci": "pnpm run checks && pnpm run build && pnpm run test:coverage"
+    "ci": "pnpm run checks && pnpm run build && pnpm run test:coverage",
+    "refresh": "tsx --env-file-if-exists=.env scripts/refresh.ts",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "bootstrap": "./scripts/bootstrap.sh"
   },
   "dependencies": {
-    "@common-grants/sdk": "^0.9.0",
+    "@common-grants/cg-grants-gov": "^0.4.0",
+    "@common-grants/sdk": "^0.9.1",
     "@hono/node-server": "^2.1.1",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.6.3",
@@ -45,6 +50,7 @@
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "wrangler": "^4.156.0"
   }
 }

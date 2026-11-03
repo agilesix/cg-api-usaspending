@@ -1,167 +1,229 @@
-# CommonGrants API template — Hono
+# CommonGrants USAspending awards API
 
-A working [CommonGrants](https://commongrants.org) API you can run in about a
-minute, then point at your own data.
+A [CommonGrants](https://commongrants.org) API for federal assistance awards. It
+pulls awards from [USAspending](https://www.usaspending.gov), links each one to
+the [Simpler.Grants.gov](https://simpler.grants.gov) opportunity it resulted
+from, and serves both through the CommonGrants award and opportunity routes
+(Core v0.5).
 
-It starts as a complete, self-contained service: three opportunity endpoints
-backed by bundled sample data, every request and response validated with the
-published [`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk)
-schemas, and an OpenAPI 3.1 document generated from those same schemas at
-`/openapi.json`. Nothing is stubbed out and nothing is left as an exercise —
-connecting your own data is one interface with three methods.
+It is a reference implementation for the awards work: built from the
+[CommonGrants Hono template](https://github.com/common-grants/cg-api-template-hono),
+with every request and response validated against the published
+[`@common-grants/sdk`](https://www.npmjs.com/package/@common-grants/sdk)
+schemas, and deployed the same way as the state APIs
+([cg-api-ca](https://github.com/agilesix/cg-api-ca) and its siblings).
 
-Built with [Hono](https://hono.dev) and
-[`@hono/zod-openapi`](https://github.com/honojs/middleware/tree/main/packages/zod-openapi).
+It replaces [cg-usaspending](https://github.com/agilesix/cg-usaspending), the
+script that first joined the two datasets. That script's pipeline lives on here
+as the scheduled refresh.
 
 ---
 
-## Prerequisites
+## How the link works
 
-- **Node.js 24** — the runtime. Use whichever installation or version manager
-  you prefer; the included [`.nvmrc`](.nvmrc) is available for `nvm` users.
-- **[pnpm](https://pnpm.io) 11.20.0** — the package manager and script runner.
-  The version is pinned in `packageManager`.
+USAspending reports a funding opportunity number on each assistance award
+(`funding_opportunity.number`). Simpler.Grants.gov reports the same number on
+each opportunity (`customFields.federalOpportunityNumber`, via the
+[Grants.gov plugin](https://www.npmjs.com/package/@common-grants/cg-grants-gov)).
+Matching the two gives the link, and it is published in both directions:
 
-No project-specific global packages, credentials, database or infrastructure
-are required.
+- **Opportunity to awards:** `GET /common-grants/opportunities/{oppId}` lists
+  the awards it resulted in under `awards`.
+- **Award to opportunity:** every award carries `opportunity`, with the
+  opportunity number in `opportunity.identifiers["opp:us:fon"]`. Search awards
+  with the `opportunityId` filter to get the full records for one opportunity.
+
+## Where the data comes from, and how fresh it is
+
+Each refresh:
+
+1. Samples assistance awards from USAspending: the top 15 by amount and another 15 by
+   award ID, for each of seven agencies that report opportunity numbers
+   (HHS, Education, EPA, Justice, Interior, NSF, Energy), over the past year.
+2. Keeps the awards that carry a real opportunity number.
+3. Looks each number up on Simpler.Grants.gov and keeps the exact matches.
+4. Turns each matched award into a CommonGrants `AwardBase` record and checks
+   it against the SDK schema.
+
+It is a sample, not every award: enough to show the link with real records.
+`GET /snapshot` reports when the data was pulled, what it covers, and how many
+records made it through each step.
+
+The deployed API refreshes once a day. Running locally, it serves the
+snapshot bundled at `src/data/snapshot.json`, so no API key or network is
+needed.
 
 ## Get started
 
-Click **Use this template** at the top of
-[this repository](https://github.com/common-grants/cg-api-template-hono) to
-create your own, then:
+You need **Node.js 24** and **[pnpm](https://pnpm.io) 11.20.0**.
 
 ```bash
-git clone https://github.com/<you>/<your-api>.git
-cd <your-api>
-node --version # must report v24.x
-pnpm --version # must report 11.20.0
+git clone https://github.com/agilesix/cg-api-usaspending.git
+cd cg-api-usaspending
 pnpm install --frozen-lockfile
+pnpm run ci     # checks, build and tests
+pnpm run dev    # http://localhost:3000/docs
 ```
 
-Check that everything works before you change anything:
+A few requests to try:
 
 ```bash
-pnpm run ci
-```
+# When the data was pulled, and what it covers
+curl http://localhost:3000/snapshot
 
-That runs the static checks, the build, and the test suite with coverage.
+# A page of awards, most recently modified first
+curl 'http://localhost:3000/common-grants/awards?pageSize=2'
 
-Hosted CI runs that same command, then `pnpm run audit`.
+# An opportunity, with the awards it resulted in
+curl http://localhost:3000/common-grants/opportunities/<oppId>
 
-Start the server:
-
-```bash
-pnpm run dev
-```
-
-Open <http://localhost:3000/docs> to browse the API in Swagger UI and try a
-request from the browser. Or, in another terminal:
-
-```bash
-# A page of opportunities, most recently modified first
-curl 'http://localhost:3000/common-grants/opportunities?pageSize=2'
-
-# Filtered and sorted search
-curl -X POST http://localhost:3000/common-grants/opportunities/search \
+# Every award from one opportunity, largest first
+curl -X POST http://localhost:3000/common-grants/awards/search \
   -H 'Content-Type: application/json' \
-  -d '{"filters":{"status":{"operator":"in","value":["open"]}},"sorting":{"sortBy":"title"}}'
-
-# The OpenAPI 3.1 document, generated from the same schemas
-curl http://localhost:3000/openapi.json
+  -d '{"filters":{"opportunityId":{"operator":"in","value":["<oppId>"]}},
+       "sorting":{"sortBy":"funding.awardedAmount","sortOrder":"desc"}}'
 ```
 
-## Connect your own data
+### Refresh the data locally
 
-The bundled sample data lives behind a three-method interface. Implement that
-interface against your database or upstream API and the routes, validation and
-OpenAPI document all keep working unchanged.
+Copy `.env.example` to `.env` and add a
+[Simpler.Grants.gov API key](https://simpler.grants.gov/developer), then:
 
-**→ [PORTING.md](PORTING.md) is the walkthrough.** It covers replacing the
-repository, mapping your ids onto stable UUIDs, handling date-valued fields in
-filters and sorts, adding custom fields in one file, and which tests to keep.
+```bash
+pnpm refresh
+```
+
+That rewrites `src/data/snapshot.json` from the live APIs. Commit it when you
+want the bundled sample, and the tests that run against it, to move forward.
+Settings such as the agencies and date window are read from the environment;
+see [`src/pipeline/config.ts`](src/pipeline/config.ts).
 
 ## Endpoints
 
-| Method | Path                                   | Description                                                                                                                 |
-| ------ | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `GET`  | `/common-grants/opportunities`         | Paginated list, most recent `lastModifiedAt` first                                                                          |
-| `GET`  | `/common-grants/opportunities/{oppId}` | One opportunity by id                                                                                                       |
-| `POST` | `/common-grants/opportunities/search`  | Filtered, sorted, paginated search                                                                                          |
-| `GET`  | `/health`                              | Liveness check                                                                                                              |
-| `GET`  | `/openapi.json`                        | The OpenAPI 3.1 document                                                                                                    |
-| `GET`  | `/docs`                                | Swagger UI for the OpenAPI document; its assets load from the jsDelivr CDN (see [PORTING §9](PORTING.md#9-before-you-ship)) |
+| Method | Path                                   | Description                                                     |
+| ------ | -------------------------------------- | --------------------------------------------------------------- |
+| `GET`  | `/common-grants/awards`                | Paginated list, most recent `lastModifiedAt` first              |
+| `GET`  | `/common-grants/awards/{awdId}`        | One award, with the opportunity it resulted from                |
+| `POST` | `/common-grants/awards/search`         | Text search, filters, sorting, pagination                       |
+| `GET`  | `/common-grants/opportunities`         | Paginated list of the opportunities the awards link to          |
+| `GET`  | `/common-grants/opportunities/{oppId}` | One opportunity, with the awards it resulted in                 |
+| `POST` | `/common-grants/opportunities/search`  | Filtered, sorted, paginated search                              |
+| `GET`  | `/snapshot`                            | When the data was pulled, what it covers, and the record counts |
+| `GET`  | `/health`                              | Liveness check                                                  |
+| `GET`  | `/openapi.json`                        | The OpenAPI 3.1 document                                        |
+| `GET`  | `/docs`                                | Swagger UI                                                      |
+| `GET`  | `/`                                    | Redirects to `/docs`                                            |
+| `POST` | `/admin/sync`                          | Deployed only: run a refresh now (Bearer `SYNC_SECRET`)         |
 
-Every success envelope is parsed with its `@common-grants/sdk` schema before it
-is sent, so repository output that drifts from the published shape becomes a
-`500`, never a `200`. Error bodies carry no repository data; they are typed
-against the SDK's `ErrorSchema` and checked against it in the tests. Requests
-that do not match their schema get a `400` in the protocol's error shape; an
-unknown but well-formed id gets a `404` in the protocol's not-found shape.
+Award search supports the protocol's default filters (`status`,
+`opportunityId`, `awardDateRange`, `awardedAmountRange`) and sort keys. As in
+the template, every success response is parsed with its SDK schema before it is
+sent, so data that drifts from the published shape becomes a `500`, never a
+`200`. Custom filters and sort keys are reported as not applied rather than
+silently ignored.
+
+## Deployment
+
+Same setup as the state APIs: a Cloudflare Worker, a daily Cron trigger, and an
+R2 bucket. There is no D1 database. A refresh produces one small snapshot file,
+stored as `latest.json` (what the API serves) and as a dated copy under
+`snapshots/`. A refresh that matches no awards is not stored, so a bad upstream
+day leaves the last good snapshot in place.
+
+| Piece                                                      | What it does                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [`wrangler.jsonc`](wrangler.jsonc)                         | Worker, R2 bucket, daily Cron at 08:00 UTC, `usaspending.api.cg.a6lab.ai` |
+| [`src/worker.ts`](src/worker.ts)                           | Serves `latest.json`, runs the scheduled refresh and `/admin/sync`        |
+| [`scripts/bootstrap.sh`](scripts/bootstrap.sh)             | One-time setup: bucket, first deploy, Worker secrets, first refresh       |
+| [`cd-production.yml`](.github/workflows/cd-production.yml) | Checks and deploys on every push to `main`                                |
+| [`cd-preview.yml`](.github/workflows/cd-preview.yml)       | Uploads each PR as a preview version of the Worker                        |
+| [`manual-sync.yml`](.github/workflows/manual-sync.yml)     | Runs a refresh on the deployed API from the Actions tab                   |
+
+**One-time setup.** `scripts/bootstrap.sh` does all of it and is safe to re-run.
+It creates the R2 bucket, deploys the Worker (which also creates the Cron and
+the custom domain), saves `SGG_API_KEY` and `SYNC_SECRET` as Worker secrets, and
+runs the first refresh. Run it locally: `pnpm exec wrangler login`, put
+`SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`, then `pnpm run bootstrap`. Works
+from any branch. It stays out of CI because creating the Worker and the bucket
+needs more access than the per-Worker tokens below have.
+
+CI/CD shares one account-owned API token, limited to this Worker with the
+**Individual Workers: Editor** role (per-Worker roles need account-owned
+tokens). That is enough to upload previews and to deploy, since deploys leave
+the custom domain unchanged. If a production deploy ever fails with a 403 on
+routes, add Zone → Workers Routes → Edit on `a6lab.ai`.
+
+| Secret                  | What it is                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Individual Workers Editor on `usaspending-commongrants-api`         |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account the state APIs use                           |
+| `SYNC_SECRET`           | Any string; callers of `/admin/sync` must send it as a Bearer token |
+
+Set the repository variable `PRODUCTION_BASE_URL` too; Manual sync needs it.
+After setup, the Worker secrets persist across deploys, so
+`cd-production.yml` only deploys. Re-run the bootstrap to change one.
+
+**PR previews.** `cd-preview.yml` uploads every pull request from this
+repository as a new version of the production Worker without deploying it, and
+comments its URL on the PR: `https://pr-<number>-usaspending-commongrants-api.<subdomain>.workers.dev`.
+Production traffic keeps going to the deployed version, and there is nothing to
+clean up when the PR closes. A preview shares production's R2 bucket and
+secrets: it serves the same `latest.json`, and because it runs with
+`ENVIRONMENT=preview` it never writes it (`/admin/sync` answers `403` and
+background refreshes are off). Preview URLs are public. Two caveats:
+
+- Previews only get a URL once a production deploy has applied
+  `preview_urls: true` from `wrangler.jsonc`.
+- While a preview is the Worker's newest version, `wrangler secret put` refuses
+  to run until the next production deploy. Use `wrangler versions secret put`
+  or re-run the bootstrap, which deploys before it sets secrets.
+
+To try the Worker locally, put `SGG_API_KEY` and `SYNC_SECRET` in `.dev.vars`
+and run `pnpm run dev:worker`. `wrangler dev --test-scheduled` also exposes
+`/__scheduled` for triggering the Cron by hand.
 
 ## Commands
 
-| Command                             | What it does                                                    |
-| ----------------------------------- | --------------------------------------------------------------- |
-| `pnpm run dev`                      | Start the server with reload on change                          |
-| `pnpm run build`                    | Compile to `dist/`                                              |
-| `pnpm run start`                    | Run the compiled server on Node                                 |
-| `pnpm run test`                     | Run the test suite                                              |
-| `pnpm run test:coverage`            | Run the tests with a coverage report                            |
-| `pnpm run checks`                   | Lint, format check and typecheck (never writes files)           |
-| `pnpm run lint` / `pnpm run format` | Apply lint and formatting fixes                                 |
-| `pnpm run audit`                    | The required dependency audit                                   |
-| `pnpm run audit:report`             | Every severity, not just high                                   |
-| `pnpm run ci`                       | The static/build/test suite: `checks`, `build`, `test:coverage` |
-
-`pnpm run audit` is deliberately separate from `pnpm run ci` and runs
-immediately after it in hosted CI.
-
-pnpm installs dependencies and runs package scripts; the application runs on
-Node 24. `pnpm run start` executes `node dist/index.js`.
+| Command               | What it does                                        |
+| --------------------- | --------------------------------------------------- |
+| `pnpm run dev`        | Start the Node server with reload on change         |
+| `pnpm run dev:worker` | Run the Worker locally with `wrangler dev`          |
+| `pnpm refresh`        | Rewrite `src/data/snapshot.json` from the live APIs |
+| `pnpm run test`       | Run the test suite                                  |
+| `pnpm run checks`     | Lint, format check and typecheck                    |
+| `pnpm run ci`         | `checks`, `build`, `test:coverage`                  |
+| `pnpm run audit`      | The required dependency audit                       |
+| `pnpm run deploy`     | Deploy the Worker (CI does this on push to `main`)  |
+| `pnpm run bootstrap`  | One-time Cloudflare setup (see Deployment)          |
 
 ## Structure
 
 ```
 src/
-  index.ts               Node entrypoint — the only file that knows about Node
-  app.ts                 createApp({ repository }) — runtime-neutral factory
-  http.ts                Shared error shapes
+  index.ts             Node entrypoint: serves the bundled snapshot
+  worker.ts            Cloudflare entrypoint: R2, Cron, /admin/sync
+  app.ts               createApp(): runtime-neutral, builds every route
   routes/
-    opportunities.ts     Route definitions, handlers, request/response validation
+    awards.ts          Award routes, on the SDK's award route schemas
+    opportunities.ts   Opportunity routes, from the template
+    common.ts          Pagination, error responses, response validation
   data/
-    schema.ts            The one opportunity schema — extend custom fields here
-    repository.ts        The data seam: list / get / search
-    fixtures.ts          Reference implementation over the bundled sample data
-    opportunities.json   The bundled sample data
-test/                    Vitest suites: fixtures, app, routes, OpenAPI
+    schema.ts          The opportunity schema: the Grants.gov plugin's
+    snapshot.ts        The snapshot file's shape
+    snapshot.json      The bundled snapshot (real data, see /snapshot)
+    repository.ts      The data seam
+    memory.ts          In-memory repositories over a snapshot
+  pipeline/            The refresh, from cg-usaspending
+    run.ts             Sample, match, transform, validate
+    config.ts          Settings and defaults
+    usaspending.ts     USAspending client
+    sgg.ts             Simpler.Grants.gov lookup via the Grants.gov plugin
+    join.ts            The join on opportunity number
+    award.ts           USAspending award to CommonGrants AwardBase
+scripts/refresh.ts     Run a refresh from Node
+scripts/bootstrap.sh   One-time Cloudflare setup
+test/                  Routes, the bundled snapshot end to end, the refresh offline
 ```
-
-## Maintenance
-
-This template is maintained by the [CommonGrants organization](https://github.com/common-grants).
-File issues and pull requests here.
-
-Projects created from this template are **independent**. There is no automatic
-synchronization, no backports, and no source-maintainer responsibility for
-derivative applications. You own your copy, including its dependency updates
-and its `.github/` metadata — replace the issue templates and
-contribution links with your own.
-
-For how to keep your own copy current — and why updating your dependencies and
-adopting template changes are two different jobs — see
-[Keeping up to date](PORTING.md#8-keeping-up-to-date).
-
-## Scope
-
-This template is a starting point, not a framework. It deliberately ships
-without deployment or auth recipes, a project generator, a live database
-example, or release machinery. Add what your service needs.
-
-## Contributing
-
-Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
-and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
