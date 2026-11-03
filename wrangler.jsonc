@@ -22,10 +22,12 @@
       "custom_domain": true,
     },
   ],
-  // PR previews are versions of this Worker, uploaded without deploying, each
-  // at <alias>-usaspending-commongrants-api.<subdomain>.workers.dev. With a
-  // custom domain the workers.dev route is off, and Version URLs follow it
-  // unless enabled here. Production stays on the custom domain only.
+  // Wrangler turns workers.dev off when routes are set, and Version URLs with
+  // it. Keep both on, as the state APIs have them by default: production also
+  // answers at usaspending-commongrants-api.<subdomain>.workers.dev, and each
+  // PR preview, a version uploaded without deploying, at
+  // <alias>-usaspending-commongrants-api.<subdomain>.workers.dev.
+  "workers_dev": true,
   "preview_urls": true,
   "triggers": {
     // Refresh once a day. USAspending loads new award data daily, so running
