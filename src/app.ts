@@ -13,7 +13,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { ErrorSchema, SuccessSchema } from "@common-grants/sdk/schemas";
 import type { AwardRepository, OpportunityRepository } from "./data/repository.js";
 import { createAwardRepository, createOpportunityRepository } from "./data/memory.js";
-import type { Snapshot, SnapshotReport } from "./data/snapshot.js";
+import type { Snapshot } from "./data/snapshot.js";
 import { createAwardRoutes } from "./routes/awards.js";
 import { createOpportunityRoutes } from "./routes/opportunities.js";
 import { errorBody, validationErrorHook } from "./http.js";
@@ -27,13 +27,14 @@ export const AWARDS_BASE_PATH = "/common-grants/awards";
 /** What the data is and when it was pulled, served at `/snapshot`. */
 export interface SnapshotInfo {
   asOf: string;
-  report: SnapshotReport;
+  report: Record<string, unknown>;
 }
 
 export interface CreateAppOptions {
   opportunities: OpportunityRepository;
   awards: AwardRepository;
-  snapshot?: SnapshotInfo;
+  /** Fixed details, or a lookup run per request (the Worker reads the latest refresh). */
+  snapshot?: SnapshotInfo | (() => Promise<SnapshotInfo | undefined>);
 }
 
 const healthRoute = createRoute({
@@ -64,14 +65,14 @@ const snapshotRoute = createRoute({
   summary: "Data as of",
   description:
     "When the served data was last refreshed from USAspending and Simpler.Grants.gov, " +
-    "which agencies and dates it covers, and how many records made it through each step.",
+    "what it covers, and how many records made it through each step.",
   responses: {
     200: {
       description: "Details of the current data snapshot",
       content: { "application/json": { schema: SnapshotInfoSchema } },
     },
     404: {
-      description: "This instance was started without snapshot details",
+      description: "No refresh has finished yet",
       content: { "application/json": { schema: ErrorSchema } },
     },
   },
@@ -82,11 +83,12 @@ export function createApp({ opportunities, awards, snapshot }: CreateAppOptions)
 
   app.openapi(healthRoute, c => c.json({ status: 200, message: "ok" }, 200));
 
-  app.openapi(snapshotRoute, c =>
-    snapshot === undefined
+  app.openapi(snapshotRoute, async c => {
+    const info = typeof snapshot === "function" ? await snapshot() : snapshot;
+    return info === undefined
       ? c.json(errorBody(404, "No snapshot details"), 404)
-      : c.json({ status: 200, message: "Snapshot details", data: snapshot }, 200)
-  );
+      : c.json({ status: 200, message: "Snapshot details", data: info }, 200);
+  });
 
   app.route(OPPORTUNITIES_BASE_PATH, createOpportunityRoutes(opportunities));
   app.route(AWARDS_BASE_PATH, createAwardRoutes(awards));

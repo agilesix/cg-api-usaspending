@@ -7,9 +7,10 @@ name: Preview Deploy
 # cleaning up when the PR closes: Cloudflare keeps the 1,000 most recent
 # aliases.
 #
-# A preview shares production's R2 bucket and secrets. It reads the same
-# latest.json, and ENVIRONMENT=preview stops it from ever writing it (see
-# isPreview in src/worker.ts). Version URLs are public.
+# A preview shares production's D1 database, R2 bucket and secrets: it serves
+# the same data, and ENVIRONMENT=preview stops it from ever starting a
+# refresh (see isPreview in src/worker.ts). Version URLs
+# are public.
 #
 # Repository secrets it needs:
 #   CLOUDFLARE_API_TOKEN   account-owned token with Individual Workers Editor

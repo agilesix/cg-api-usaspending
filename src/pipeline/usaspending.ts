@@ -15,6 +15,7 @@
 import { z } from "zod";
 import type { Config } from "./config.js";
 import { mapWithConcurrency } from "./concurrency.js";
+import { isNotApplicable } from "../sync/fon.js";
 
 // =============================================================================
 // Response schemas
@@ -96,9 +97,16 @@ export type AwardDetail = z.infer<typeof AwardDetailSchema>;
 // HTTP helpers
 // =============================================================================
 
+/**
+ * A request that hangs (a dropped connection, or USAspending's rate limit
+ * holding it open) fails after this long instead of using up a whole step.
+ */
+const REQUEST_TIMEOUT_MS = 30_000;
+
 async function getJson(url: string): Promise<unknown> {
   const response = await fetch(url, {
     headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) {
     throw new Error(`GET ${url} failed: ${response.status} ${response.statusText}`);
@@ -111,6 +119,7 @@ async function postJson(url: string, body: unknown): Promise<unknown> {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) {
     throw new Error(`POST ${url} failed: ${response.status} ${response.statusText}`);
@@ -162,20 +171,28 @@ async function fetchAwardIds(
 
 /** Fetches the full award record for a generated unique award id. */
 export async function fetchAwardDetail(config: Config, awardId: string): Promise<AwardDetail> {
-  const url = `${config.usaSpendingBaseUrl}/api/v2/awards/${encodeURIComponent(awardId)}/`;
-  return AwardDetailSchema.parse(await getJson(url));
+  return (await fetchAwardDetailWithRaw(config, awardId)).detail;
 }
 
-/** Values agencies submit in place of a real opportunity number. The GSDM lets
- * an agency report "Not Applicable" when an award is not competitive and
- * discretionary; several agencies use minor spelling variants. */
-const NOT_APPLICABLE = new Set(["not applicable", "notapplicable", "n/a", "na", "none", "-", "0"]);
+/**
+ * The award record parsed, plus the response exactly as USAspending sent it.
+ * Parsing keeps only the fields the transform reads; the raw form is what gets
+ * archived and hashed, so a change to any field counts as a change.
+ */
+export async function fetchAwardDetailWithRaw(
+  config: Pick<Config, "usaSpendingBaseUrl">,
+  awardId: string
+): Promise<{ detail: AwardDetail; raw: unknown }> {
+  const url = `${config.usaSpendingBaseUrl}/api/v2/awards/${encodeURIComponent(awardId)}/`;
+  const raw = await getJson(url);
+  return { detail: AwardDetailSchema.parse(raw), raw };
+}
 
 /** True when the award carries a funding opportunity number worth looking up. */
 export function hasUsableOpportunityNumber(award: AwardDetail): boolean {
   const fon = award.funding_opportunity?.number?.trim();
   if (!fon) return false;
-  return !NOT_APPLICABLE.has(fon.toLowerCase());
+  return !isNotApplicable(fon);
 }
 
 /** Reads the award's funding opportunity number, trimmed. */
