@@ -31,14 +31,14 @@ import type {
 // ############################################################################
 
 /** `Money.amount` is a decimal *string*; compare it as a number, not text. */
-function moneyAmount(money: { amount: string } | null | undefined): number | undefined {
+export function moneyAmount(money: { amount: string } | null | undefined): number | undefined {
   if (money == null) return undefined;
   const parsed = Number(money.amount);
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
 /** The date of a single-date event, when there is one. */
-function eventDate(event: { eventType: string } | null | undefined): Date | undefined {
+export function eventDate(event: { eventType: string } | null | undefined): Date | undefined {
   return event != null && event.eventType === "singleDate" && "date" in event
     ? (event.date as Date)
     : undefined;

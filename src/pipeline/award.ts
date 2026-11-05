@@ -121,7 +121,15 @@ function buildDescription(award: AwardDetail, federalOpportunityNumber: string):
  * awards are not distinguishable in this data, so `cancelled` is never emitted.
  */
 function buildStatus(award: AwardDetail, asOf: Date): AwdStatus {
-  const endDate = award.period_of_performance?.end_date?.trim();
+  return awardStatus(award.period_of_performance?.end_date, asOf);
+}
+
+/**
+ * The status rule on its own, for stores that keep the period-of-performance
+ * end date and derive status when the record is read, so it never goes stale.
+ */
+export function awardStatus(periodEnd: string | null | undefined, asOf: Date): AwdStatus {
+  const endDate = periodEnd?.trim();
   if (endDate && Date.parse(`${endDate}T23:59:59Z`) < asOf.getTime()) {
     return {
       value: "completed",

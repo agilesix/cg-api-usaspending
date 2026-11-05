@@ -9,10 +9,38 @@
   // APIs' {state}-grants-{purpose}.
   "r2_buckets": [
     {
+      // Raw upstream records: the newest copy of each under records/, every
+      // version under history/ (expired after a year by a lifecycle rule).
       "binding": "SNAPSHOTS",
       "bucket_name": "usaspending-awards-snapshots",
     },
   ],
+  // What the API serves. Created once by scripts/bootstrap.sh, which also
+  // applies migrations/; later schema changes need `wrangler d1 migrations apply`.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "usaspending-awards-db",
+      "database_id": "REPLACE_WITH_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // The daily refresh outlasts one invocation, so it runs as a Workflow.
+  "workflows": [
+    {
+      "name": "usaspending-awards-sync",
+      "binding": "SYNC",
+      "class_name": "SyncWorkflow",
+    },
+  ],
+  // Reading a USAspending download (about 500,000 CSV rows across the fiscal
+  // years) took about a second of CPU locally; matching, hashing and building
+  // D1 writes add a few more. 60 seconds leaves wide headroom over the
+  // 30-second default. Raising it, and Workflows themselves, need the Workers
+  // Paid plan.
+  "limits": {
+    "cpu_ms": 60000,
+  },
   // The custom domain, usaspending.api.cg.a6lab.ai, is attached in the
   // Cloudflare dashboard, not listed under "routes", as in the state APIs.
   // Wrangler re-applies listed custom domains on every deploy, which needs
@@ -25,9 +53,9 @@
   "workers_dev": true,
   "preview_urls": true,
   "triggers": {
-    // Refresh once a day. USAspending loads new award data daily, so running
-    // more often would only re-fetch the same records. 08:00 UTC is after the
-    // overnight load, and matches cg-api-md.
+    // Start the refresh once a day. USAspending loads new award data daily, so
+    // running more often would only re-fetch the same records. 08:00 UTC is
+    // after the overnight load, and matches cg-api-md.
     "crons": ["0 8 * * *"],
   },
   "vars": {

@@ -46,7 +46,7 @@ jobs:
 
           http=$(curl -sS -X POST "${url}" \
             -H "Authorization: Bearer ${SYNC_SECRET}" \
-            --max-time 600 \
+            --max-time 60 \
             -o response.json -w '%{http_code}')
 
           echo "HTTP ${http}"
@@ -67,7 +67,8 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "${http}" != "200" ]; then
-            echo "::error::Sync failed (HTTP ${http})"
+          # The refresh runs in the background as a Workflow: 202 means it started.
+          if [ "${http}" != "202" ]; then
+            echo "::error::Sync did not start (HTTP ${http})"
             exit 1
           fi

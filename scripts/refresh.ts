@@ -5,8 +5,9 @@
  *   pnpm refresh path/to/out.json    writes somewhere else
  *
  * Reads settings from the environment (see `src/pipeline/config.ts`).
- * `SGG_API_KEY` is required. The deployed Worker runs the same refresh on a
- * schedule; this script is for local runs and for updating the bundled sample.
+ * `SGG_API_KEY` is required. This builds the small sample bundled with the
+ * code. The deployed Worker refreshes its database separately, through the
+ * Workflow in `src/sync/workflow.ts`.
  */
 
 import fs from "node:fs/promises";
